@@ -2,9 +2,13 @@ import express from "express";
 import conectaNaDatabase from "./config/dbConnect.js";
 import fs from "fs/promises";
 import path from 'path';
+
 import upload from "./config/multer.js";
 import people from "./models/People.js";
 import photo from "./models/Photo.js";
+
+import peopleRoutes from './routes/peopleRoutes.js'
+import photoRoutes from './routes/photoRoutes.js';
 
 const app = express();
 /**Midlewares */
@@ -19,6 +23,9 @@ conexao.once("open", () => {
     console.log("Conexao estabelecida com êxito.")
 });
 
+/** ########################## ESTE É O CÓDIGO SEM REFATORAÇÃO, USE COMO PASE PARA APLICAR OS PATTERS */
+/** Veja as responsabilidades e finalidade de cada um dos padrões e refatore o código */
+
 /** GET: Lista todos os usuários cadastrados */
 app.get("/people", async (req, res) => {
     res.set('Cache-Control', 'public, max-age=3600');
@@ -26,18 +33,6 @@ app.get("/people", async (req, res) => {
     res.status(200).json(people);
 });
 
-/** POST: Cria um novo usuário e o adiciona à lista */
-app.post("/people/create", async (req, res) => {
-    const { name, age, email } = req.body;
-    const newPeople = await people.create({
-        name, age, email
-    });
-    res.status(201).json({
-        "error": false,
-        "msg": "Registro criado com sucesso!",
-        "data": newPeople
-    });
-});
 
 /** PUT: Atualiza o nome e a idade de um usuário existente pelo ID (índice) */
 app.put("/people/:id", async (req, res) => {
@@ -89,55 +84,12 @@ function buscaPessaPorNome(nome) {
     );
 }
 
-/**Endpoints para API de fotos */
-/**POST: Criar uma nova foto para a pessoa */
-app.post('/photo/create',
-    upload.single('photo'),  // Processa upload
-    async (req, res) => {
-        try {
-            const { peopleId } = req.body;
-            const file = req.file;
-            // Validação: arquivo enviado?
-            if (!file) {
-                return res.status(400).json({
-                    message: "Arquivo obrigatório"
-                });
-            }
-            // Validação: peopleId fornecido?
-            if (!peopleId) {
-                await fs.unlink(file.path);  // Limpar arquivo
-                return res.status(400).json({
-                    message: "ID da pessoa obrigatório"
-                });
-            }
-            // Criar documento
-            const ph = new photo({
-                people: peopleId,
-                photo: file.filename
-            });
-            await ph.save();
-            await ph.populate('people', 'name age');
-            res.status(201).json(ph);
-
-        } catch (error) {
-            // Limpar arquivo se erro
-            if (req.file) {
-                await fs.unlink(req.file.path);
-            }
-            res.status(500).json({
-                message: "Erro ao criar foto",
-                error: error.message
-            });
-        }
-    }
-);
-
 /**PUT: Alterar uma foto existente (substituir foto) */
 app.put('/photo/:id',
     upload.single('photo'),
     async (req, res) => {
         try {
-            const { id } = req.params;
+            const { id } = req.paramss;
             const newFile = req.file;
             let updateData = {};
             const currentPhoto = await photo.findById(id);
@@ -173,13 +125,6 @@ app.put('/photo/:id',
     }
 );
 
-// GET /photos - Listar todas
-app.get('/photos', async (req, res) => {
-    const photos = await photo.find()
-        .populate('people', 'name age')
-        .sort({ uploadDate: -1 });
-    res.status(200).json(photos);
-});
 
 // GET /photos/:id - Por ID
 app.get('/photos/:id', async (req, res) => {
@@ -201,5 +146,15 @@ app.delete('/photos/:id', async (req, res) => {
 
     res.status(204).send();
 });
+
+
+/** ####################### CÓDIGO REFATORADO ###################### */
+/**Endpoints para API fotos */
+// Todas as rotas estão definidas em photoRoutes
+app.use('/',photoRoutes);
+
+/** Endpoints para API pessoas */
+// Todas as rotas estão definidas em peopleRoutes
+app.use('/',peopleRoutes);
 
 export default app;
