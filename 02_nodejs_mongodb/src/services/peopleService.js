@@ -7,6 +7,10 @@ class PeopleService{
         return await peopleRepository.create(people);
     }
     /**Impemente os demais métodos */
+    async getAll(){
+        /**... */
+        
+    }
 }
 
 export default new PeopleService();

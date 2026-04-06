@@ -15,9 +15,24 @@ class PeopleController {
     }
     /**Impmente os outros métodos a partir da qui 
      * GET
-     * UPDATE
-     * DELETE
-     * Outros necessários
+     */
+    async index(req, res){
+        try{
+            const peoples = peopleService.getAll();
+            res.status(200).json(peoples);
+        }catch(error){
+            res.status(500).json({'Erro': error.message});
+        }
+    } 
+    /* UPDATE */
+    async update(req, res){
+
+    }
+    /* DELETE */
+    async delete(req, res){
+
+    }
+    /* Outros necessários
     */
 
 }
