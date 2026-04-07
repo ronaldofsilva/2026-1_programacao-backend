@@ -10,3 +10,6 @@ notes.txt
 notes/
 
 assets
+
+.gitignore
+.gitignore.*
