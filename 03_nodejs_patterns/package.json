@@ -1,5 +1,5 @@
 {
-  "name": "02_nodejs_mongodb",
+  "name": "03_nodejs_patterns",
   "version": "1.0.0",
   "description": "",
   "main": "server.js",
