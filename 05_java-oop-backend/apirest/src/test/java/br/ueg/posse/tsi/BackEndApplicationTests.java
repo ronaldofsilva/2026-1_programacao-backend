@@ -1,10 +1,10 @@
-package br.ueg.posse.sti.apirest;
+package br.ueg.posse.tsi;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ApirestApplicationTests {
+class BackEndApplicationTests {
 
 	@Test
 	void contextLoads() {
