@@ -18,6 +18,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 
+import br.ueg.posse.tsi.DTOs.people.PeopleResponseDTO;
+import br.ueg.posse.tsi.DTOs.photo.PhotoCreateDTO;
+import br.ueg.posse.tsi.DTOs.photo.PhotoResponseDTO;
 import br.ueg.posse.tsi.models.People;
 import br.ueg.posse.tsi.models.Photo;
 import br.ueg.posse.tsi.services.PeopleService;
@@ -31,34 +34,38 @@ public class PhotoController {
     @Autowired
     private PeopleService peopleService;
 
-
     public PhotoController(PhotoService service) {
         this.service = service;
     }
 
     @GetMapping("/get")
-    public ResponseEntity<List<Photo>> listarTodos() {
+    public ResponseEntity<List<PhotoResponseDTO>> listarTodos() {
         return ResponseEntity.ok(service.listarTodos());
     }
-    
+
     // Observe o objeto passado no genérico "?"
-    @PostMapping(value="/post", consumes={MediaType.MULTIPART_FORM_DATA_VALUE})
+    @PostMapping(value = "/post", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<?> salvar(
-           @RequestParam("photo") MultipartFile file,
-            @RequestParam("peopleId") String peopleId) {   
-         try {
-            //Photo photoMetadata = objectMapper.readValue(metadataJson, Photo.class);            
-            People people = peopleService.buscarPeoplePorId(peopleId);
-            
-            // Criar metadata da foto
-            Photo photoMetadata = new Photo();
+            @RequestParam("photo") MultipartFile file,
+            @RequestParam("peopleId") String peopleId) {
+        try {
+            // Photo photoMetadata = objectMapper.readValue(metadataJson, Photo.class);
+            PeopleResponseDTO dto = peopleService.buscarPessoaPorId(peopleId);
+            // Criar entidade Photo
+            PhotoCreateDTO photoMetadata = new PhotoCreateDTO();
+            // Photo espera uma entidade People, por isso não utilizamos o DTO
+            People people = new People(
+                    dto.getId(),
+                    dto.getName(),
+                    dto.getAge(),
+                    dto.getEmail());
             photoMetadata.setPeople(people);
-            Photo newPhoto = service.uploadAndSave(file, photoMetadata);
-            
+            PhotoResponseDTO newPhoto = service.uploadAndSave(file, photoMetadata);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(newPhoto);
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(Map.of("error", e.getMessage()));
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 
@@ -102,11 +109,10 @@ public class PhotoController {
         }
     }
 
-    @GetMapping("/pessoa/{pessoaId}")
-    public ResponseEntity<List<Photo>> buscarPorPessoa(@PathVariable String pessoaId) {
-        return service.buscarPorPessoa(pessoaId)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/people/{peopleId}")
+    public ResponseEntity<List<PhotoResponseDTO>> buscarPorPessoa(@PathVariable String peopleId) {
+        List<PhotoResponseDTO> photos = service.buscarPorPessoa(peopleId);
+        return ResponseEntity.ok(photos);
 
+    }
 }

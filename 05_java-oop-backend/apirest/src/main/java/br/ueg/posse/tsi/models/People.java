@@ -7,11 +7,6 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 
 // Padrão Data Mapper + Active Record
 // Separa a camada de domínio (objetos de negócio) da camada de banco de dados, utilizando mapeadores intermediários
@@ -21,25 +16,33 @@ public class People {
     @Id
     private String id;
     private String name;
-
-    @NotNull(message = "Idade é obrigatória")
-    @Min(value = 18, message = "Idade mínima é 18 anos")
-    @Max(value = 120, message = "Idade máxima é 120 anos")
-    private int age;
-    
-    @NotBlank(message = "Email é obrigatório")
-    @Email(message = "Email deve ser válido")
+   private int age;
     private String email;
-    
     @CreatedDate
     private LocalDateTime createdAt;
     @LastModifiedDate
     private LocalDateTime updatedAt;
 
+    public People(){
+        
+    }
+
+    public People(String name, int age, String email){
+        this.name = name;
+        this.age = age;
+        this.email = email;
+    }
+
+    public People(String id, String name, int age, String email){
+        this.id = id;
+        this.name = name;
+        this.age = age;
+        this.email = email;
+    }
+
     public String getId() {
         return id;
     }
-
     public void setId(String id) {
         this.id = id;
     }

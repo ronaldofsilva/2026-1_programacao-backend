@@ -8,9 +8,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import br.ueg.posse.tsi.DTOs.photo.PhotoCreateDTO;
+import br.ueg.posse.tsi.DTOs.photo.PhotoResponseDTO;
+import br.ueg.posse.tsi.models.People;
 import br.ueg.posse.tsi.models.Photo;
 import br.ueg.posse.tsi.repositories.PhotoRepository;
 
@@ -18,13 +21,12 @@ import br.ueg.posse.tsi.repositories.PhotoRepository;
 public class PhotoService {
     private final PhotoRepository repository;
 
-   
     /*
      * Define o caminho onde as fotos serão salvas
      * Em uma aplicação real deve ser informado o caminho absoluto do serviço de
      * storage, por exemplo Amazon S3
      */
-    private final String uploadDirectory = "src/main/resources/static/uploads/";
+    private final String uploadDirectory = "apirest/src/main/resources/static/uploads/";
 
     public PhotoService(PhotoRepository repository) {
         this.repository = repository;
@@ -41,20 +43,24 @@ public class PhotoService {
      * @throws IOException
      */
 
-    public List<Photo> listarTodos() {
-        return repository.findAll();
+    public List<PhotoResponseDTO> listarTodos() {
+        return repository.findAll()
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public Optional<Photo> buscarPorId(String id) {
-        return repository.findById(id);
+    public Optional<PhotoResponseDTO> buscarPorId(String id) {
+        return repository.findById(id)
+                .map(this::toResponse);
     }
 
-    public Photo uploadAndSave(MultipartFile file, Photo photoMetadata) throws IOException {
+    public PhotoResponseDTO uploadAndSave(MultipartFile file, PhotoCreateDTO dto) throws IOException {
         if (file.isEmpty()) {
             throw new RuntimeException("O arquivo está vazio!");
         }
-        if (photoMetadata.getPeople() == null && photoMetadata.getPeople().getId() == null) {
-            throw new RuntimeException("Pessoa não encontrada"); 
+        if (dto.getPeople() == null && dto.getPeople().getId() == null) {
+            throw new RuntimeException("Pessoa não encontrada");
         }
         /**
          * Importante validar a extensão o arquivo também, para evitar que o usuário
@@ -68,8 +74,8 @@ public class PhotoService {
         String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
         Path filePath = directoryPath.resolve(fileName);
         Files.copy(file.getInputStream(), filePath);
-        photoMetadata.setPhoto(fileName);
-        return repository.save(photoMetadata);
+        dto.setPhoto(fileName);
+        return toResponse(repository.save(toEntity(dto)));
     }
 
     public Photo replaceFile(String id, MultipartFile newFile) throws IOException {
@@ -98,12 +104,19 @@ public class PhotoService {
         return repository.save(existingPhoto);
     }
 
-    public Optional<List<Photo>> buscarPorPessoa(String pessoaId) {
-        if (pessoaId == null || pessoaId.trim().isEmpty()) {
-            throw new IllegalArgumentException("ID da pessoa não pode ser vazio");
+    public List<PhotoResponseDTO> buscarPorPessoa(String peopleId) {
+        People people = new People();
+        people.setId(peopleId);
+
+        if (peopleId == null || peopleId.trim().isEmpty()) {
+            throw new IllegalArgumentException(
+                    "ID da pessoa não pode ser vazio");
         }
-        List<Photo> photos = repository.findByPeople(pessoaId);
-        return photos.isEmpty() ? Optional.empty() : Optional.of(photos);
+
+        return repository.findByPeople(people)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public void deletePhoto(String id) throws IOException {
@@ -126,6 +139,17 @@ public class PhotoService {
         }
     }
 
+    private PhotoResponseDTO toResponse(Photo p) {
+        return new PhotoResponseDTO(
+                p.getId(), p.getPeople(), p.getPhoto(),
+                p.getCreatedAt(),
+                p.getUpdatedAt());
+    };
 
+    private Photo toEntity(PhotoCreateDTO dto) {
+        return new Photo(
+                dto.getPeople(),
+                dto.getPhoto());
+    };
 
 }

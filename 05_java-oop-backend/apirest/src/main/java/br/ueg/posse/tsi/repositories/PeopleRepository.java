@@ -6,6 +6,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import br.ueg.posse.tsi.DTOs.people.PeopleResponseDTO;
 import br.ueg.posse.tsi.models.People;
 
 @Repository
@@ -19,10 +20,10 @@ public interface PeopleRepository extends MongoRepository<People, String>{
      */
     Optional<People> findByName(String name);
     List<People> findByAge(int age);
-    List<People> findByNameContainingIgnoreCase(String termo);
+    List<PeopleResponseDTO> findByNameContainingIgnoreCase(String termo);
     boolean existsByEmail(String email);
     
     @Query("{'age': {$gte: ?0, $lte: ?1}}")
     List<People> findByAgeBetween(int min, int max);
-    
+    List<People> findByEmail(String email);
 }

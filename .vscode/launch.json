@@ -1,0 +1,13 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot",
+            "request": "launch",
+            "mainClass": "br.ueg.posse.tsi.BackEndApplication",
+            "projectName": "04_java-oop-mongodb",
+            "vmArgs": "--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED"
+        }
+    ]
+}
