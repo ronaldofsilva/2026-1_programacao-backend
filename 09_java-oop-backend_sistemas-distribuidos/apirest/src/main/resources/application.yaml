@@ -1,0 +1,7 @@
+server:
+  servlet:
+    context-path: /api
+
+springdoc:
+  swagger-ui:
+    path: /docs.html
